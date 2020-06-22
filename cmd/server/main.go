@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ohowland/cgc_web/internal/server"
+	"github.com/ohowland/cgc_web/internal/pkg/server"
 )
 
 func main() {

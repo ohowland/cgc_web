@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import Graph from "react-graph-vis";
 
 import "./styles.css";
-import apis from "../api";
+import apis from "./api";
 
 function fetchMockGraph() {
     const nodes = [
@@ -31,12 +31,18 @@ function fetchMockGraph() {
 }
 
 function assembleGraph(graphConfig) {
-    var nodes = [];
-    var edges = [];
 
-    for (const assetConfig in graphConfig) {
-        nodes.append({id: assetConfig.uuid, label: assetConfig.name, color: '#d1d1d1', shape: 'dot', borderWidth: 2, size: 30})
-    };
+    const getNodes = x => ({
+        id: x.uuid, 
+        label: x.name, 
+        color: '#d1d1d1', 
+        shape: 'dot', 
+        borderWidth: 2, 
+        size: 30,
+    })
+
+    const nodes = graphConfig.map(getNodes)
+    const edges = []
 
     const graph = {
         nodes: nodes,
@@ -51,7 +57,7 @@ class HMI extends React.Component {
         super(props);
         this.state = {
             selectedNode: null,
-            graph: [],
+            graph: fetchMockGraph(),
             isLoading: false,
         };
     }
@@ -59,9 +65,9 @@ class HMI extends React.Component {
     componentDidMount = async() => {
         this.setState({ isLoading: true })
 
-        await api.getAllAssetConfig().then(config => {
+        await apis.getAllAssetConfig().then(config => {
             this.setState({
-                graph: assembleGraph(config),
+                graph: assembleGraph(config.data),
                 isLoading: false,
             })
         })
