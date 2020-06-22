@@ -5,31 +5,6 @@ import Graph from "react-graph-vis";
 import "./styles.css";
 import apis from "./api";
 
-function fetchMockGraph() {
-    const nodes = [
-        { id: 1, label: "bus 1", color: '#d1d1d1', shape: 'dot', borderWidth: 2, size: 30 },
-        { id: 2, label: "bus 2", color: '#d1d1d1', shape: 'dot', borderWidth: 2, size: 30 },
-        { id: 3, label: "grid 1", color: '#d1d1d1', shape: 'dot', borderWidth: 2, size: 30 },
-        { id: 4, label: "feeder 1", color: '#d1d1d1', shape: 'dot', borderWidth: 2, size: 30 },
-        { id: 5, label: "ess 1", color: '#d1d1d1', shape: 'dot', borderWidth: 2, size: 30 }
-    ];
-
-    const edges = [
-        { from: 1, to: 2 },
-        { from: 2, to: 1 },
-        { from: 3, to: 1 },
-        { from: 1, to: 4 },
-        { from: 5, to: 2 }
-    ];
-
-    const graph = {
-        nodes: nodes,
-        edges: edges
-    };
-
-    return graph
-}
-
 function assembleGraph(graphConfig) {
 
     const getNodes = x => ({
@@ -41,14 +16,23 @@ function assembleGraph(graphConfig) {
         size: 30,
     })
 
+    const getEdges = function(x) {
+        var edges = [];
+        for (var i = 0; i < x.edges.length; i++) {
+            edges.push({from: x.uuid, to: x.edges[i]})
+        }
+        
+       return edges
+    }
+
     const nodes = graphConfig.map(getNodes)
-    const edges = []
+    const edges = graphConfig.flatMap(getEdges)
 
     const graph = {
         nodes: nodes,
         edges: edges,
     };
-
+    console.log(graph)
     return graph
 }
 
@@ -57,7 +41,7 @@ class HMI extends React.Component {
         super(props);
         this.state = {
             selectedNode: null,
-            graph: fetchMockGraph(),
+            graph: {nodes: [], edges: []},
             isLoading: false,
         };
     }
@@ -78,22 +62,38 @@ class HMI extends React.Component {
     }
 
     render() {
-        return (
-            <div>
-                <div className="GraphView">
-                    <GraphView 
-                        graph={this.state.graph} 
-                        onClick={(event) => this.onNodeClick(event)}
-                    />
+        if (this.state.isLoading) {
+            return (
+                <div>
+                    <LoadingView />
                 </div>
-                <div className="DataView">
-                    <DataView 
-                        selectedNode={this.state.selectedNode}
-                    />
+            )
+        } else { 
+            return (
+                <div>
+                    <div className="GraphView">
+                        <GraphView 
+                            graph={this.state.graph}
+                            onClick={(event) => this.onNodeClick(event)}
+                        />
+                    </div>
+                    <div className="DataView">
+                        <DataView 
+                            selectedNode={this.state.selectedNode}
+                        />
+                    </div>
                 </div>
-            </div>
-        )
+            )
+        }
     };
+}
+
+class LoadingView extends React.Component {
+    render() {
+        return (
+            <h1>Loading</h1>
+        )
+    }
 }
 
 class DataView extends React.Component {
@@ -126,9 +126,10 @@ class GraphView extends React.Component {
                 },
                 edges: {
                     color: "#000000",
-                    width: 2
+                    width: 2,
+                    length: 200,
                 },
-                height: "500px"
+                height: '500px',
             },
             events: {
                 select: function(event) {

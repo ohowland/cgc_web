@@ -60,7 +60,7 @@ func (a *App) assetConfig(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer a.client.Disconnect(ctx)
+	//defer a.client.Disconnect(ctx)
 
 	assetConfigCollection := a.client.Database("cgc_db").Collection("assetConfig")
 
