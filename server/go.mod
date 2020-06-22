@@ -1,4 +1,4 @@
-module github.com/ohowland/cgc_web
+module github.com/ohowland/cgc_web/server
 
 go 1.13
 
