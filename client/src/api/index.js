@@ -5,9 +5,12 @@ const api = axios.create({
 })
 
 export const getAllAssetConfig = () => api.get('/assetConfig')
+export const getAllAssetStatus = () => api.get('/assetStatus')
+
 
 const apis = {
     getAllAssetConfig,
+    getAllAssetStatus,
 }
 
 export default apis

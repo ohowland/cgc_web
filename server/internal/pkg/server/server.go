@@ -13,19 +13,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-/*
-type Adapter func(http.Handler) http.Handler
-
-func Adapt(h http.Handler, adapters ...Adapter) http.Handler {
-	for _, adapter := range adapters {
-		h = adapter(h)
-	}
-	return h
-}
-
-func withDB(db *mongo)
-*/
-
 type App struct {
 	baseDir string
 	dbName  string
@@ -44,6 +31,7 @@ func (a *App) Router() *mux.Router {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/api/assetConfig", a.assetConfig).Methods("GET")
+	r.HandleFunc("/api/assetStatus", a.assetStatus).Methods("GET")
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(a.baseDir)))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(a.baseDir))))
@@ -51,9 +39,47 @@ func (a *App) Router() *mux.Router {
 	return r
 }
 
+func (a App) assetStatus(w http.ResponseWriter, r *http.Request) {
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	ctx, _ := context.WithTimeout(context.TODO(), 20*time.Second)
+	err = client.Connect(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer client.Disconnect(ctx)
+
+	assetStatusCollection := client.Database(a.dbName).Collection("assetStatus")
+
+	cur, err := assetStatusCollection.Find(ctx, bson.D{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer cur.Close(ctx)
+
+	resp := bson.A{}
+	for cur.Next(ctx) {
+		var elem bson.M
+		if err := cur.Decode(&elem); err != nil {
+			log.Fatal(err)
+		}
+		resp = append(resp, elem)
+		log.Println(elem)
+	}
+
+	json, err := json.Marshal(resp)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(json)
+}
+
 func (a App) assetConfig(w http.ResponseWriter, r *http.Request) {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-	ctx, _ := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, _ := context.WithTimeout(context.TODO(), 20*time.Second)
 	err = client.Connect(ctx)
 	if err != nil {
 		log.Fatal(err)
@@ -76,6 +102,7 @@ func (a App) assetConfig(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 		resp = append(resp, elem)
+		log.Println(elem)
 	}
 
 	json, err := json.Marshal(resp)

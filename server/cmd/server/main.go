@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -11,9 +12,15 @@ import (
 
 func main() {
 	var dir string
+	var logging bool
 
-	flag.StringVar(&dir, "dir", "./client/build/", "the directory to serve fles from. Defaults to the current dir")
+	flag.StringVar(&dir, "dir", "../client/build/", "the directory to serve fles from. Defaults to the current dir")
+	flag.BoolVar(&logging, "l", false, "enable logging")
 	flag.Parse()
+
+	if !logging {
+		log.SetOutput(ioutil.Discard)
+	}
 
 	app, err := server.New(dir)
 
@@ -30,5 +37,6 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 
+	log.Println("Starting CGC Web Server")
 	log.Fatal(srv.ListenAndServe())
 }
