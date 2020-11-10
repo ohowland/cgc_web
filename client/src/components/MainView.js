@@ -102,8 +102,16 @@ function assembleGraph(roster) {
 
     const getEdges = function(x) {
         var edges = [];
-        if (x.config.dynamic.members) {
-            var keys = Object.keys(x.config.dynamic.members)
+
+        if (x.config.dynamic.memberassets) {
+            var keys = Object.keys(x.config.dynamic.memberassets)
+            for (var i = 0; i < keys.length; i++) {
+                edges.push({from: keys[i], to: x.pid})
+            }
+        }
+
+        if (x.config.dynamic.memberbuses) {
+            var keys = Object.keys(x.config.dynamic.memberbuses)
             for (var i = 0; i < keys.length; i++) {
                 edges.push({from: keys[i], to: x.pid})
             }
