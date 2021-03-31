@@ -1,16 +1,9 @@
 package server
 
 import (
-	"context"
-	"encoding/json"
-	"log"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type App struct {
@@ -22,7 +15,6 @@ type App struct {
 func New(dir string) (*App, error) {
 	return &App{
 		baseDir: dir,
-		dbName:  "cgc_db",
 	}, nil
 }
 
@@ -30,15 +22,13 @@ func New(dir string) (*App, error) {
 func (a *App) Router() *mux.Router {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/assetConfig", a.assetConfig).Methods("GET")
-	r.HandleFunc("/api/assetStatus", a.assetStatus).Methods("GET")
-
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(a.baseDir)))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(a.baseDir))))
 
 	return r
 }
 
+/*
 func (a App) assetStatus(w http.ResponseWriter, r *http.Request) {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	ctx, _ := context.WithTimeout(context.TODO(), 20*time.Second)
@@ -114,3 +104,5 @@ func (a App) assetConfig(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(json)
 }
+
+*/

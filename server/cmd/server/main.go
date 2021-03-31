@@ -1,42 +1,47 @@
 package main
 
 import (
-	"flag"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"time"
 
-	"github.com/ohowland/cgc_web/server/internal/pkg/server"
+	"github.com/gorilla/websocket"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
+var upgrader = websocket.Upgrader{}
+
+type Message struct {
+	Message string `json:"message"`
+}
+
 func main() {
-	var dir string
-	var logging bool
 
-	flag.StringVar(&dir, "dir", "../client/build/", "the directory to serve fles from. Defaults to the current dir")
-	flag.BoolVar(&logging, "l", false, "enable logging")
-	flag.Parse()
+	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
-	if !logging {
-		log.SetOutput(ioutil.Discard)
-	}
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "hello")
+	})
 
-	app, err := server.New(dir)
+	e.GET("/ws", func(c echo.Context) error {
+		upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
-	if err != nil {
-		log.Fatal(err)
-	}
+		ws, err := upgrader.Upgrade(c.Response().Writer, c.Request(), nil)
+		if err != nil {
+			log.Println(err)
+		}
+		defer ws.Close()
+		log.Println("Connected.")
 
-	r := app.Router()
+		m := Message{"hi"}
+		if err = ws.WriteJSON(m); err != nil {
+			log.Printf("Websocket Write error: %v\n", err)
+		}
 
-	srv := &http.Server{
-		Handler:      r,
-		Addr:         "127.0.0.1:8000",
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
-	}
+		return nil
+	})
 
-	log.Println("Starting CGC Web Server")
-	log.Fatal(srv.ListenAndServe())
+	e.Logger.Fatal(e.Start(":1323"))
 }
